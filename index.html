@@ -1907,7 +1907,7 @@ body.loaded { overflow:hidden; }
               </div>
               <button type="submit" class="btn-primary">🚀 Send Message</button>
               <p style="font-size:.68rem;color:var(--text-dim);margin-top:8px">
-                Sends directly to abdelrahman.salaheng@gmail.com via your email client.
+                 Your message will be sent securely to my email.
               </p>
             </form>
           </div>
@@ -2313,16 +2313,51 @@ function copyEmail(){
   navigator.clipboard.writeText('abdelrahman.salaheng@gmail.com')
     .then(()=>showToast('📋 Email copied!'));
 }
-function sendEmail(e){
+async function sendEmail(e) {
   e.preventDefault();
-  const name=document.getElementById('sName').value;
-  const email=document.getElementById('sEmail').value;
-  const subj=document.getElementById('sSubject').value;
-  const body=document.getElementById('sBody').value;
-  const full=`From: ${name} (${email})\n\n${body}`;
-  window.location.href=`mailto:abdelrahman.salaheng@gmail.com?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(full)}`;
-  showToast('✅ Opening your email client...');
-  e.target.reset();
+
+  const form = e.target;
+  const button = form.querySelector('button[type="submit"]');
+
+  const name = document.getElementById('sName').value.trim();
+  const email = document.getElementById('sEmail').value.trim();
+  const subject = document.getElementById('sSubject').value.trim();
+  const message = document.getElementById('sBody').value.trim();
+
+  button.disabled = true;
+  button.textContent = 'Sending...';
+
+  try {
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        subject,
+        message
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send message.');
+    }
+
+    showToast('✅ Message sent successfully!');
+    form.reset();
+
+  } catch (error) {
+    console.error('Contact form error:', error);
+    showToast('❌ Could not send message. Please try again.');
+
+  } finally {
+    button.disabled = false;
+    button.textContent = '🚀 Send Message';
+  }
 }
 
 /* ════════════════════════════════
